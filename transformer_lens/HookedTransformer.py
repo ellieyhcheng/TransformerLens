@@ -552,6 +552,11 @@ class HookedTransformer(HookedRootModule):
                         devices.get_device_for_block_index(i, self.cfg)
                     )
 
+                if attention_mask is not None:
+                    attention_mask = attention_mask.to(
+                        devices.get_device_for_block_index(i, self.cfg)
+                    )
+
                 residual = block(
                     residual,
                     # Cache contains a list of HookedTransformerKeyValueCache objects, one for each
@@ -1977,12 +1982,12 @@ class HookedTransformer(HookedRootModule):
 
                 if do_sample:
                     sampled_tokens = utils.sample_logits(
-                        final_logits,
+                        final_logits.to(devices.get_device_for_block_index(0, self.cfg)),
                         top_k=top_k,
                         top_p=top_p,
                         temperature=temperature,
                         freq_penalty=freq_penalty,
-                        tokens=tokens,
+                        tokens=tokens.to(devices.get_device_for_block_index(0, self.cfg)),
                     ).to(devices.get_device_for_block_index(0, self.cfg))
                 else:
                     sampled_tokens = final_logits.argmax(-1).to(
